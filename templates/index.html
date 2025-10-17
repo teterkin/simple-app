@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cloud Migration Demo</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 50px; }
+        .container { max-width: 800px; margin: auto; }
+        .info-box { background: #f0f0f0; padding: 20px; margin: 20px 0; border-radius: 5px; }
+        .button { background: #007cba; color: white; padding: 10px 20px; border: none; border-radius: 3px; cursor: pointer; margin: 5px; }
+        .button:hover { background: #005a8b; }
+        .records { margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .info-text {
+            line-height: 1.6;
+            text-align: left;
+            margin-bottom: 1em;
+        }
+        .highlight {
+            font-weight: bold;
+            color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Cloud Migration Demo</h1>
+
+        <div class="info-box">
+            <h3>Current System Info</h3>
+            <p><strong>Hardware ID:</strong> <span id="hardware-id">Loading...</span></p>
+            <p><strong>UTC Time:</strong> <span id="utc-time">Loading...</span></p>
+            <p class="info-text">
+                <span class="highlight">Note!</span>&nbsp;&nbsp;<span>Time updates automatically every 5 seconds</span>
+            </p>
+        </div>
+
+        <button class="button" onclick="saveRecord()">Save to Database</button>
+        <button class="button" onclick="loadRecords()">Refresh Records</button>
+
+        <div class="records">
+            <h3>Database Records</h3>
+            <table id="records-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Hardware ID</th>
+                        <th>UTC Time</th>
+                        <th>Saved At</th>
+                    </tr>
+                </thead>
+                <tbody id="records-body">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function updateCurrent() {
+            fetch('/api/current')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('hardware-id').textContent = data.hardware_id;
+                    document.getElementById('utc-time').textContent = data.utc_time;
+                });
+        }
+
+        function saveRecord() {
+            fetch('/api/save', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    alert('Record saved!');
+                    loadRecords();
+                });
+        }
+
+        function loadRecords() {
+            fetch('/api/records')
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.getElementById('records-body');
+                    tbody.innerHTML = '';
+                    data.forEach(record => {
+                        const row = tbody.insertRow();
+                        row.insertCell(0).textContent = record.id;
+                        row.insertCell(1).textContent = record.hardware_id;
+                        row.insertCell(2).textContent = record.utc_time;
+                        row.insertCell(3).textContent = record.timestamp;
+                    });
+                });
+        }
+
+        // Update current info every 5 seconds
+        setInterval(updateCurrent, 5000);
+
+        // Initial load
+        updateCurrent();
+        loadRecords();
+    </script>
+</body>
+</html>
